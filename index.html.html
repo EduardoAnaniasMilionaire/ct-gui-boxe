@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CT Gui Boxe Team | Alta Performance em Combate</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Paleta High-End Brutalista */
+            --bg-base: #030303;
+            --bg-surface: #0a0a0a;
+            --bg-card: #121212;
+            --border-light: #1f1f1f;
+            --border-focus: #333;
+            --red: #C8102E;
+            --red-hover: #E01535;
+            --red-glow: rgba(200, 16, 46, 0.15);
+            --text-main: #F4F4F5;
+            --text-muted: #888888;
+            
+            /* Tipografia */
+            --font-display: 'Oswald', sans-serif;
+            --font-body: 'DM Sans', sans-serif;
+            
+            /* Utilitários */
+            --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            --transition-harsh: all 0.15s linear;
+        }
+
+        /* --- RESET & SETUP --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; /* Custom cursor */ }
+        html { scroll-behavior: smooth; }
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- CUSTOM CURSOR --- */
+        .cursor-dot, .cursor-outline {
+            position: fixed;
+            top: 0; left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .cursor-dot {
+            width: 6px; height: 6px;
+            background-color: var(--red);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+        .cursor-outline {
+            width: 30px; height: 30px;
+            border: 1px solid rgba(200, 16, 46, 0.5);
+            transition: width 0.2s, height 0.2s, border-color 0.2s;
+        }
+        .cursor-hovering .cursor-dot { background-color: transparent; }
+        .cursor-hovering .cursor-outline {
+            width: 50px; height: 50px;
+            border-color: var(--text-main);
+            background-color: rgba(255,255,255,0.05);
+            backdrop-filter: blur(2px);
+        }
+
+        /* --- SCROLL PROGRESS --- */
+        .scroll-progress {
+            position: fixed; top: 0; left: 0; height: 3px;
+            background: var(--red);
+            width: 0%; z-index: 10000;
+            transition: width 0.1s;
+        }
+
+        /* --- TEXTURES & EFFECTS --- */
+        .noise {
+            position: fixed; inset: 0; z-index: 9998; pointer-events: none; opacity: 0.04;
+            background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="n"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23n)"/%3E%3C/svg%3E');
+        }
+
+        .bg-watermark {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 100vw; max-width: 900px; height: 100vw; max-height: 900px;
+            background-image: url('logo.jpg');
+            background-size: contain; background-repeat: no-repeat; background-position: center;
+            opacity: 0.03; z-index: 0; pointer-events: none;
+            filter: grayscale(100%);
+        }
+
+        ::selection { background: var(--red); color: var(--text-main); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-base); }
+        ::-webkit-scrollbar-thumb { background: var(--border-focus); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--red); }
+
+        /* --- TYPOGRAPHY --- */
+        h1, h2, h3, .font-display { font-family: var(--font-display); text-transform: uppercase; }
+        
+        .title-massive {
+            font-size: clamp(3.5rem, 10vw, 8rem);
+            font-weight: 700;
+            line-height: 0.9;
+            letter-spacing: -0.02em;
+        }
+        
+        .title-section {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 600;
+            line-height: 1;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .label-red {
+            display: flex; align-items: center; gap: 1rem;
+            font-family: var(--font-display);
+            font-size: 0.85rem; letter-spacing: 0.3em;
+            color: var(--red); text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+        .label-red::after {
+            content: ''; height: 1px; width: 40px; background: var(--red);
+        }
+
+        /* --- NAVIGATION --- */
+        nav {
+            position: fixed; top: 0; left: 0; width: 100%;
+            padding: 1.5rem 4%; z-index: 200;
+            display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(to bottom, rgba(3,3,3,0.9) 0%, transparent 100%);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            transition: padding 0.3s ease;
+        }
+        nav.scrolled { padding: 1rem 4%; background: rgba(3,3,3,0.95); border-bottom-color: var(--border-light); }
+        
+        .brand { display: flex; align-items: center; gap: 1rem; text-decoration: none; }
+        .brand img {
+            width: 58px; height: 58px; border-radius: 50%;
+            border: 2px solid var(--border-focus);
+            object-fit: cover; transition: var(--transition-harsh);
+        }
+        .brand:hover img { border-color: var(--red); transform: scale(1.05); }
+        .brand span {
+            font-family: var(--font-display); color: var(--text-main);
+            font-size: 1.2rem; font-weight: 600; line-height: 1.1; letter-spacing: 0.05em;
+        }
+
+        .nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
+        .nav-links a {
+            color: var(--text-muted); text-decoration: none;
+            font-family: var(--font-display); font-size: 0.95rem;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            transition: var(--transition-harsh);
+            position: relative;
+        }
+        .nav-links a:hover { color: var(--text-main); }
+        .nav-links a::after {
+            content: ''; position: absolute; bottom: -4px; left: 0;
+            width: 0%; height: 2px; background: var(--red); transition: var(--transition-smooth);
+        }
+        .nav-links a:hover::after { width: 100%; }
+
+        /* --- BUTTONS --- */
+        .btn-primary {
+            position: relative; display: inline-flex; align-items: center; justify-content: center;
+            background: var(--red); color: var(--text-main);
+            font-family: var(--font-display); font-weight: 600; font-size: 1.1rem;
+            letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
+            padding: 1rem 2.5rem; border: none; overflow: hidden;
+            transition: var(--transition-smooth);
+            z-index: 1;
+        }
+        .btn-primary::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-base); z-index: -1;
+            transform: scaleY(0); transform-origin: bottom; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn-primary:hover { color: var(--text-main); box-shadow: 0 10px 30px var(--red-glow); transform: translateY(-3px); }
+        .btn-primary:hover::before { transform: scaleY(1); background: var(--red-hover); }
+
+        .btn-outline {
+            display: inline-flex; align-items: center; justify-content: center;
+            background: transparent; color: var(--text-main);
+            border: 1px solid var(--border-focus);
+            font-family: var(--font-display); font-weight: 500; font-size: 1.1rem;
+            letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
+            padding: 1rem 2.5rem; transition: var(--transition-harsh);
+        }
+        .btn-outline:hover { border-color: var(--red); background: rgba(200,16,46,0.05); }
+
+        /* --- LAYOUT UTILS --- */
+        .section-padding { padding: 8rem 4%; }
+        .grid-split { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+        @media (max-width: 900px) { .grid-split { grid-template-columns: 1fr; gap: 3rem; } }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            min-height: 100vh;
+            display: flex; align-items: center;
+            position: relative;
+            padding: 120px 4% 4rem;
+        }
+        .hero-content { position: relative; z-index: 10; max-width: 700px; }
+        
+        .hero h1 { margin-bottom: 1.5rem; }
+        .hero h1 span { color: transparent; -webkit-text-stroke: 1px var(--text-muted); }
+        .hero h1 .highlight { color: var(--red); -webkit-text-stroke: 0; }
+
+        .hero-desc {
+            font-size: 1.1rem; line-height: 1.8; color: var(--text-muted);
+            max-width: 500px; margin-bottom: 3rem; font-weight: 300;
+        }
+
+        .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+        .hero-visual {
+            position: absolute; right: 0; top: 0;
+            width: 50vw; height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+        }
+        .hero-visual::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, var(--bg-base) 0%, transparent 50%, var(--bg-base) 100%),
+                        linear-gradient(0deg, var(--bg-base) 0%, transparent 20%);
+        }
+        .hero-img-wrapper {
+            position: relative; width: 80%; height: 80%;
+            transform-origin: center;
+        }
+        .hero-img-wrapper img {
+            width: 100%; height: 100%; object-fit: cover; object-position: top;
+            filter: grayscale(80%) contrast(1.2);
+            transition: transform 0.5s ease-out;
+        }
+        /* Efeito de Parallax via JS aplicará transform aqui */
+        
+        .hero-logo {
+            width: 80px; height: 80px; border-radius: 50%;
+            border: 2px solid var(--red); margin-bottom: 1.5rem;
+            object-fit: cover;
+        }
+
+        @media (max-width: 900px) {
+            .hero-visual { width: 100%; opacity: 0.15; z-index: 0; pointer-events: none; }
+            .hero-content { z-index: 1; }
+        }
+
+        /* --- ESTATÍSTICAS REMOVIDAS --- */
+
+        /* --- SOBRE (ABOUT) --- */
+        .about-section { background: var(--bg-base); position: relative; }
+        .about-text p {
+            font-size: 1.1rem; line-height: 1.8; color: var(--text-muted);
+            margin-bottom: 1.5rem; font-weight: 300;
+        }
+        .about-text strong { color: var(--text-main); font-weight: 500; }
+        
+        .about-img-container { position: relative; padding: 2rem; }
+        .about-img-container::before {
+            content: ''; position: absolute; top: 0; right: 0;
+            width: 80%; height: 80%; border: 1px solid var(--red);
+            transform: translate(20px, -20px); z-index: 0;
+            transition: transform 0.5s ease;
+        }
+        .about-img-container:hover::before { transform: translate(10px, -10px); }
+        .about-img {
+            position: relative; z-index: 1; width: 100%; aspect-ratio: 4/5;
+            object-fit: cover; filter: grayscale(100%); transition: var(--transition-smooth);
+        }
+        .about-img-container:hover .about-img { filter: grayscale(0%); }
+
+        /* --- MODALIDADES --- */
+        .modalidades-section { background: var(--bg-surface); }
+        .mod-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem; margin-top: 4rem;
+        }
+        .mod-card {
+            background: var(--bg-card); padding: 3rem 2rem;
+            border-top: 2px solid var(--border-light);
+            position: relative; overflow: hidden;
+            transition: var(--transition-smooth);
+        }
+        .mod-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--red); transform: scaleX(0); transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+        .mod-card:hover { transform: translateY(-10px); background: #181818; }
+        .mod-card:hover::before { transform: scaleX(1); }
+        
+        .mod-number {
+            font-family: var(--font-display); font-size: 6rem; font-weight: 700;
+            color: rgba(255,255,255,0.02); position: absolute; top: -10px; right: 10px;
+            line-height: 1; transition: var(--transition-smooth);
+        }
+        .mod-card:hover .mod-number { color: var(--red-glow); transform: translateX(-10px); }
+        
+        .mod-card h3 { font-size: 2rem; margin-bottom: 1rem; position: relative; z-index: 1; }
+        .mod-card p { font-size: 1rem; color: var(--text-muted); line-height: 1.6; position: relative; z-index: 1; }
+
+        /* --- ESTRUTURA (MASONRY/GRID) --- */
+        .estrutura-section { background: var(--bg-base); }
+        .gallery-grid {
+            display: grid; grid-template-columns: repeat(12, 1fr); grid-auto-rows: 250px;
+            gap: 1rem; margin-top: 3rem;
+        }
+        .gallery-item {
+            position: relative; background: var(--bg-card); border: 1px dashed var(--border-focus);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            overflow: hidden; cursor: none; transition: var(--transition-harsh);
+        }
+        .gallery-item:hover { border-color: var(--red); border-style: solid; }
+        .gallery-item:nth-child(1) { grid-column: span 8; grid-row: span 2; }
+        .gallery-item:nth-child(2) { grid-column: span 4; }
+        .gallery-item:nth-child(3) { grid-column: span 4; }
+        @media (max-width: 768px) {
+            .gallery-item { grid-column: span 12 !important; grid-row: span 1 !important; }
+        }
+        
+        .gallery-item input { display: none; }
+        .gallery-icon { margin-bottom: 1rem; color: var(--red); }
+        .gallery-item span { font-family: var(--font-display); font-size: 0.8rem; letter-spacing: 0.1em; color: var(--text-muted); text-transform: uppercase; }
+        .gallery-item img.preview { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; }
+
+        /* --- PLANOS --- */
+        .planos-section { background: var(--bg-surface); }
+        .planos-center { display: flex; justify-content: center; margin-top: 4rem; }
+        
+        .plano-card {
+            background: var(--bg-base); border: 1px solid var(--border-light);
+            padding: 3rem; position: relative; transition: var(--transition-smooth);
+            max-width: 400px; width: 100%;
+        }
+        .plano-card.destaque {
+            background: #0f0a0a; border-color: var(--red);
+            transform: scale(1.05); z-index: 2;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        @media (max-width: 900px) { .plano-card.destaque { transform: scale(1); } }
+        
+        .plano-badge {
+            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+            background: var(--red); color: var(--text-main); font-family: var(--font-display);
+            font-size: 0.8rem; letter-spacing: 0.1em; padding: 0.3rem 1rem; text-transform: uppercase;
+        }
+        
+        .plano-card h3 { font-size: 1.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .plano-card.destaque h3 { color: var(--red); }
+        .plano-price { font-family: var(--font-display); font-size: 4rem; font-weight: 700; line-height: 1; margin-bottom: 2rem; }
+        .plano-price span { font-family: var(--font-body); font-size: 1rem; font-weight: 400; color: var(--text-muted); }
+        
+        .plano-features { list-style: none; margin-bottom: 3rem; }
+        .plano-features li {
+            padding: 1rem 0; border-bottom: 1px solid var(--border-light);
+            font-size: 0.95rem; color: var(--text-muted);
+            display: flex; align-items: center; gap: 0.8rem;
+        }
+        .plano-features li::before { content: '■'; color: var(--red); font-size: 0.6rem; }
+        .plano-card.destaque .plano-features li { color: var(--text-main); }
+        
+        .btn-full { width: 100%; text-align: center; }
+
+        /* --- CTA FINAL --- */
+        .cta-section {
+            background: linear-gradient(135deg, var(--red) 0%, #7a081a 100%);
+            padding: 8rem 4%; text-align: center; position: relative; overflow: hidden;
+        }
+        .cta-section::before {
+            content: ''; position: absolute; inset: 0;
+            background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px);
+        }
+        .cta-content { position: relative; z-index: 2; max-width: 600px; margin: 0 auto; }
+        .cta-content h2 { font-size: clamp(2.5rem, 6vw, 5rem); margin-bottom: 1rem; }
+        .cta-content p { font-size: 1.2rem; margin-bottom: 3rem; opacity: 0.9; }
+        
+        .cta-form { display: flex; flex-direction: column; gap: 1rem; }
+        .cta-form input {
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2);
+            color: var(--text-main); font-family: var(--font-body); font-size: 1.1rem;
+            padding: 1.2rem; outline: none; transition: var(--transition-harsh);
+        }
+        .cta-form input:focus { border-color: var(--text-main); background: rgba(0,0,0,0.5); }
+        .cta-form input::placeholder { color: rgba(255,255,255,0.5); }
+        
+        .btn-black {
+            background: var(--bg-base); color: var(--text-main); border: none;
+            font-family: var(--font-display); font-size: 1.2rem; font-weight: 600;
+            letter-spacing: 0.1em; text-transform: uppercase; padding: 1.2rem;
+            transition: var(--transition-smooth);
+        }
+        .btn-black:hover { background: var(--text-main); color: var(--bg-base); transform: translateY(-3px); }
+
+        /* --- FOOTER --- */
+        footer { background: var(--bg-surface); padding: 4rem 4% 2rem; border-top: 1px solid var(--border-light); }
+        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 4rem; margin-bottom: 4rem; }
+        @media (max-width: 768px) { .footer-grid { grid-template-columns: 1fr; gap: 2rem; } }
+        
+        .footer-brand { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .footer-brand img { width: 40px; height: 40px; border-radius: 50%; filter: grayscale(100%); }
+        .footer-brand span { font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; }
+        .footer-text { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; max-width: 300px; }
+        
+        .footer-col h4 { font-size: 0.9rem; letter-spacing: 0.2em; color: var(--text-main); margin-bottom: 1.5rem; }
+        .footer-col p, .footer-col a {
+            display: block; font-size: 0.95rem; color: var(--text-muted);
+            text-decoration: none; margin-bottom: 0.8rem; transition: var(--transition-harsh);
+        }
+        .footer-col a:hover { color: var(--red); }
+        
+        .footer-bottom {
+            border-top: 1px solid var(--border-light); padding-top: 2rem;
+            display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted);
+        }
+
+        /* --- ANIMATIONS (REVEAL) --- */
+        .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+        .delay-1 { transition-delay: 0.1s; }
+        .delay-2 { transition-delay: 0.2s; }
+        .delay-3 { transition-delay: 0.3s; }
+
+    </style>
+</head>
+<body>
+
+    <!-- ELEMENTOS GLOBAIS -->
+    <div class="bg-watermark"></div>
+    <div class="noise"></div>
+    <div class="scroll-progress" id="scroll-progress"></div>
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="cursor-outline" id="cursor-outline"></div>
+
+    <!-- NAVEGAÇÃO -->
+    <nav id="navbar">
+        <a href="#inicio" class="brand interactive">
+            <!-- Referenciando a imagem local exata que o usuário subiu -->
+            <img src="logo.jpg" alt="Logo CT Gui Boxe" onerror="this.style.display='none'">
+            <span>CT GUI BOXE</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#metodo" class="interactive">O Método</a></li>
+            <li><a href="#modalidades" class="interactive">Arsenal</a></li>
+            <li><a href="#planos" class="interactive">Investimento</a></li>
+        </ul>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero" id="inicio">
+        <div class="hero-content reveal active">
+            <div class="label-red">Alto Rendimento</div>
+            <img src="logo.jpg" alt="Logo CT Gui Boxe" class="hero-logo" onerror="this.style.display='none'">
+            <h1 class="title-massive">
+                TREINO<br>
+                <span class="highlight">COM PROPÓSITO.</span>
+            </h1>
+            <p class="hero-desc">
+                Aulas personalizadas de Boxe, Muay Thai, Funcional e Fortalecimento Muscular. Resultados reais.
+            </p>
+            <div class="hero-actions">
+                <a href="#planos" class="btn-primary magnetic interactive">Ver Plano</a>
+                <a href="#metodo" class="btn-outline interactive">Conhecer o Método</a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="hero-img-wrapper" id="parallax-img">
+                <!-- Referenciando a imagem local exata que o usuário subiu -->
+                <img src="coach.png" alt="Gui Head Coach" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMxMTEiLz48L3N2Zz4='">
+            </div>
+        </div>
+    </section>
+
+    <!-- SOBRE O COACH -->
+    <section class="section-padding about-section" id="metodo">
+        <div class="grid-split">
+            <div class="about-img-container reveal">
+                <!-- Fallback se não carregar a mesma imagem -->
+                <img src="coach.png" alt="O Coach" class="about-img" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMyMjIiLz48L3N2Zz4='">
+            </div>
+            <div class="about-text reveal delay-1">
+                <div class="label-red">O Head Coach</div>
+                <h2 class="title-section">GUI.<br>FAIXA PRETA EM RESULTADOS.</h2>
+                <p>Aqui não existe treino genérico. O CT Gui Boxe Team foi fundado para quem quer treinar com quem entende do assunto e quer <strong>RESULTADOS REAIS E VISÍVEIS.</strong></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODALIDADES -->
+    <section class="section-padding modalidades-section" id="modalidades">
+        <div class="label-red reveal">O Arsenal</div>
+        <h2 class="title-section reveal delay-1">ESCOLHA SUA ARMA</h2>
+        
+        <div class="mod-grid">
+            <div class="mod-card reveal interactive">
+                <div class="mod-number">01</div>
+                <h3>Boxe</h3>
+                <p>Foco em footwork, esquiva e técnica de socos. Ideal para queimar calorias e aprender a nobre arte com precisão.</p>
+            </div>
+            <div class="mod-card reveal delay-1 interactive">
+                <div class="mod-number">02</div>
+                <h3>Muay Thai</h3>
+                <p>Combinação de socos, chutes, joelhadas e cotoveladas. Excelente para condicionamento físico e defesa pessoal.</p>
+            </div>
+            <div class="mod-card reveal delay-2 interactive">
+                <div class="mod-number">03</div>
+                <h3>Funcional</h3>
+                <p>Exercícios dinâmicos que simulam movimentos do dia a dia, melhorando sua mobilidade, fôlego e resistência.</p>
+            </div>
+            <div class="mod-card reveal delay-3 interactive">
+                <div class="mod-number">04</div>
+                <h3>Fortalecimento</h3>
+                <p>Treinos focados no ganho de força e massa magra, prevenindo lesões e melhorando sua postura.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ESTRUTURA (GALERIA INTERATIVA) -->
+    <section class="section-padding estrutura-section" id="estrutura">
+        <div class="label-red reveal">O Campo de Batalha</div>
+        <h2 class="title-section reveal delay-1">NOSSA ESTRUTURA</h2>
+        <p class="reveal delay-1" style="color: var(--text-muted); max-width: 600px;">
+            Clique nos painéis para atualizar a galeria do CT com suas próprias fotos. O ambiente é bruto porque o foco está na técnica, não no luxo superficial.
+        </p>
+        
+        <div class="gallery-grid reveal delay-2">
+            <!-- Slot 1 (Grande) -->
+            <label class="gallery-item interactive">
+                <input type="file" accept="image/*" onchange="previewImage(event, this)">
+                <svg class="gallery-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <span>Ringue Principal</span>
+            </label>
+            <!-- Slot 2 -->
+            <label class="gallery-item interactive">
+                <input type="file" accept="image/*" onchange="previewImage(event, this)">
+                <svg class="gallery-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <span>Equipamentos</span>
+            </label>
+            <!-- Slot 3 -->
+            <label class="gallery-item interactive">
+                <input type="file" accept="image/*" onchange="previewImage(event, this)">
+                <svg class="gallery-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <span>Sacos de Pancada</span>
+            </label>
+        </div>
+    </section>
+
+    <!-- PLANOS -->
+    <section class="section-padding planos-section" id="planos">
+        <div class="label-red reveal">Retorno sobre Investimento</div>
+        <h2 class="title-section reveal delay-1">SEU PLANO</h2>
+        
+        <div class="planos-center">
+            <div class="plano-card destaque reveal delay-1 interactive">
+                <div class="plano-badge">Alta Performance</div>
+                <h3>Plano Mensal</h3>
+                <div class="plano-price">R$ 300<span>/mês</span></div>
+                <ul class="plano-features">
+                    <li>Treinos semanais</li>
+                    <li>Acompanhamento do Gui</li>
+                    <li>Aulas coletivas</li>
+                </ul>
+                <a href="https://wa.me/5531995733120" target="_blank" class="btn-primary btn-full interactive">Agendar Agora</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA FINAL -->
+    <section class="cta-section" id="contato">
+        <div class="cta-content reveal">
+            <h2>O TEMPO PASSA DE QUALQUER FORMA.</h2>
+            <p>Pare de adiar seu desenvolvimento. Agende agora uma aula experimental e sinta o impacto do método no seu corpo e na sua rotina.</p>
+            
+            <form class="cta-form" id="wa-form">
+                <input type="text" id="nome" placeholder="Seu Nome Completo" required class="interactive">
+                <input type="text" id="foco" placeholder="Qual seu foco? (Ex: Condicionamento, Competição)" required class="interactive">
+                <button type="submit" class="btn-black interactive">Acionar via WhatsApp</button>
+            </form>
+
+            <!-- BOTOES SOCIAIS DIRETOS -->
+            <div style="margin-top: 3rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="https://wa.me/5531995733120" target="_blank" class="btn-outline interactive" style="border-color: rgba(255,255,255,0.4); color: #fff;">Chamar no WhatsApp</a>
+                <a href="https://www.instagram.com/studio_gui_boxe/" target="_blank" class="btn-outline interactive" style="border-color: rgba(255,255,255,0.4); color: #fff;">Siga no Instagram</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-grid">
+            <div>
+                <div class="footer-brand">
+                    <img src="logo.jpg" alt="CT Logo" onerror="this.style.display='none'">
+                    <span>CT GUI BOXE</span>
+                </div>
+                <p class="footer-text">Associação Portuguesa de Esportes de Contato. Mais do que uma academia, um centro de forja de caráter e alto rendimento físico e mental.</p>
+            </div>
+            <div class="footer-col">
+                <h4>QUARTEL GENERAL</h4>
+                <p>Rua Campos Altos, 236</p>
+                <p>Caiçara, Belo Horizonte - MG</p>
+                <p>Brasil</p>
+            </div>
+            <div class="footer-col">
+                <h4>CONEXÃO DIRETA</h4>
+                <a href="https://www.instagram.com/studio_gui_boxe/" target="_blank" class="interactive">Instagram Oficial</a>
+                <a href="https://wa.me/5531995733120" target="_blank" class="interactive">WhatsApp: (31) 99573-3120</a>
+                <a href="#metodo" class="interactive">Nossa Filosofia</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div>&copy; 2026 CT Gui Boxe Team. O método fala por si.</div>
+            <div>Desenvolvido para Máxima Performance.</div>
+        </div>
+    </footer>
+
+    <script>
+        // 1. CUSTOM CURSOR LOGIC
+        const dot = document.getElementById('cursor-dot');
+        const outline = document.getElementById('cursor-outline');
+        const interactives = document.querySelectorAll('.interactive, a, button, input');
+
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX;
+            const posY = e.clientY;
+            
+            dot.style.left = `${posX}px`;
+            dot.style.top = `${posY}px`;
+            
+            // Suaviza o movimento do outline
+            outline.animate({
+                left: `${posX}px`,
+                top: `${posY}px`
+            }, { duration: 150, fill: "forwards" });
+        });
+
+        interactives.forEach(el => {
+            el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hovering'));
+            el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hovering'));
+        });
+
+        // 2. SCROLL PROGRESS BAR & NAVBAR BG
+        const progressBar = document.getElementById('scroll-progress');
+        const navbar = document.getElementById('navbar');
+
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            progressBar.style.width = scrolled + "%";
+
+            if(winScroll > 50) navbar.classList.add('scrolled');
+            else navbar.classList.remove('scrolled');
+        });
+
+        // 3. REVEAL ANIMATIONS ON SCROLL
+        const revealElements = document.querySelectorAll('.reveal');
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15, rootMargin: "0px 0px -50px 0px" });
+
+        revealElements.forEach(el => revealObserver.observe(el));
+        
+        // Ativar primeiros elementos logo ao carregar
+        setTimeout(() => {
+            document.querySelectorAll('.hero-content.reveal').forEach(el => el.classList.add('active'));
+        }, 100);
+
+        // 4. HERO PARALLAX EFFECT
+        const parallaxImg = document.getElementById('parallax-img');
+        window.addEventListener('mousemove', (e) => {
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 40;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 40;
+            if(parallaxImg) {
+                parallaxImg.style.transform = `translate(${xAxis}px, ${yAxis}px) scale(1.05)`;
+            }
+        });
+
+        // 5. MAGNETIC BUTTONS
+        const magneticBtns = document.querySelectorAll('.magnetic');
+        magneticBtns.forEach(btn => {
+            btn.addEventListener('mousemove', (e) => {
+                const rect = btn.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                btn.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = `translate(0px, 0px)`;
+            });
+        });
+
+        // 6. GALLERY IMAGE UPLOAD PREVIEW
+        function previewImage(event, labelElement) {
+            const file = event.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                let img = labelElement.querySelector('img.preview');
+                if(!img) {
+                    img = document.createElement('img');
+                    img.className = 'preview';
+                    labelElement.appendChild(img);
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+
+        // 7. WHATSAPP FORM INTEGRATION
+        document.getElementById('wa-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const nome = document.getElementById('nome').value.trim();
+            const foco = document.getElementById('foco').value.trim();
+            
+            const phone = "5531995733120"; // Atualizado com o número correto
+            const msg = `Fala Gui! Meu nome é *${nome}* e estou focado em: *${foco}*. Gostaria de saber mais sobre os treinos e agendar minha aula experimental. Pra cima!`;
+            
+            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+        });
+    </script>
+</body>
+</html>
